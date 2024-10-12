@@ -1,8 +1,18 @@
-//
-//  NetworkService.swift
-//  Quiz
-//
-//  Created by dmu mac 24 on 12/10/2024.
-//
-
 import Foundation
+
+class NetworkService {
+    static func getData(from url: URL) async -> Data? {
+        let session = URLSession.shared
+        do {
+            let (data, response) = try await session.data(from: url)
+            guard let httpResonse = response as? HTTPURLResponse else {return nil}
+            if httpResonse.statusCode != 200 {
+                //TODO errorMessage
+            }
+            return data
+        } catch {
+            print("getData error: ", error)
+        }
+        return nil
+    }
+}

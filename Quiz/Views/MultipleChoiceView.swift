@@ -1,18 +1,32 @@
-//
-//  MultipleChoiceView.swift
-//  Quiz
-//
-//  Created by dmu mac 24 on 12/10/2024.
-//
-
 import SwiftUI
 
 struct MultipleChoiceView: View {
+    let options: [String]
+    @Binding var selectedAnswer: String?
+    
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        VStack {
+            HStack {
+                ForEach(0..<2) { index in
+                    Button("\(options[index])") {
+                        selectedAnswer = options[index]
+                    }
+                    .buttonStyle(answer: options[index], selectedAnswer: selectedAnswer)
+                }
+            }
+            
+            HStack {
+                ForEach(2..<4) { index in
+                    Button("\(options[index])") {
+                        selectedAnswer = options[index]
+                    }
+                    .buttonStyle(answer: options[index], selectedAnswer: selectedAnswer)
+                }
+            }
+        }
     }
 }
 
 #Preview {
-    MultipleChoiceView()
+    MultipleChoiceView(options: ["Option 1", "Option 2", "Option 3", "Option 4"], selectedAnswer: .constant("Option 2"))
 }

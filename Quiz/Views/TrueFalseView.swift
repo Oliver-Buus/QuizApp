@@ -1,18 +1,24 @@
-//
-//  TrueFalseView.swift
-//  Quiz
-//
-//  Created by dmu mac 24 on 12/10/2024.
-//
-
 import SwiftUI
 
 struct TrueFalseView: View {
+    @Binding var selectedAnswer: String?
+    
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        HStack {
+            Button("True") {
+                selectedAnswer = "True"
+            }
+            .buttonStyle(answer: "True", selectedAnswer: selectedAnswer, backgroundColor: .green)
+
+            
+            Button("False") {
+                selectedAnswer = "False"
+            }
+            .buttonStyle(answer: "False", selectedAnswer: selectedAnswer, backgroundColor: .red)
+        }
     }
 }
 
 #Preview {
-    TrueFalseView()
+    TrueFalseView(selectedAnswer: .constant("True"))
 }

@@ -1,17 +1,12 @@
-//
-//  QuizApp.swift
-//  Quiz
-//
-//  Created by dmu mac 24 on 12/10/2024.
-//
-
 import SwiftUI
 
 @main
 struct QuizApp: App {
+    @State var controller = Controller()
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environment(controller)
         }
     }
 }
