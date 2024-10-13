@@ -1,11 +1,12 @@
 import SwiftUI
 
 struct QuizStartView: View {
-    @Environment(Controller.self) private var controller: Controller
+    //@Environment(Controller.self) private var controller: Controller
+    @EnvironmentObject var controller: Controller
     
     @State private var selectedCategory: QuizCategory? = nil
     
-    @State private var selectedDifficulty = ""
+    @State private var selectedDifficulty: Difficulty = .any
     
     @State private var isQuizStarted = false
     
@@ -19,8 +20,9 @@ struct QuizStartView: View {
                         Text(category.name).tag(category)
                     }
                 }
-                .onChange(of: selectedCategory) {
-                    selectedDifficulty = ""
+                
+                if let selectedCategory = selectedCategory {
+                    QuestionAmountView(category: selectedCategory)
                 }
                 
                 Picker("Difficulty", selection: $selectedDifficulty) {
@@ -30,52 +32,25 @@ struct QuizStartView: View {
                 }
                 .pickerStyle(.segmented)
                 
-                if let selectedCategory = selectedCategory,
-                   let questionCount = selectedCategory.questionCount {
-                    VStack {
-                        
-                        Text("\(selectedCategory.name)")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                        Text("Total questions: \(questionCount.totalQuestionCount)")
-                            .font(.headline)
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack {
-                                Text("Easy:")
-                                    .fontWeight(.semibold) // Gør overskriften semibold
-                                Spacer()
-                                Text("\(questionCount.totalEasyQuestionCount)")
-                            }
-                            
-                            HStack {
-                                Text("Medium:")
-                                    .fontWeight(.semibold)
-                                Spacer()
-                                Text("\(questionCount.totalMediumQuestionCount)")
-                            }
-                            
-                            HStack {
-                                Text("Hard:")
-                                    .fontWeight(.semibold)
-                                Spacer()
-                                Text("\(questionCount.totalHardQuestionCount)")
-                            }
-                        }
-                    }
-                    .padding()
-                    .cornerRadius(10)
-                }
-                
-                
                 Button("Start Quiz") {
-                    controller.fetchQuestions(categoryString: selectedCategory?.name ?? "", difficulty: selectedDifficulty) {
+                    controller.loadQuestions(category: selectedCategory!, difficulty: selectedDifficulty) {
                         isQuizStarted = true
                     }
                 }
+                .font(.title)
+                .fontWeight(.bold)
                 .disabled(selectedCategory == nil)
+                .frame(maxWidth: .infinity)
+                .foregroundStyle(Color(.white))
+                .background(Color(.blue))
+                .cornerRadius(10)
+                .padding()
+                
             }
             .navigationDestination(isPresented: $isQuizStarted) {
-                QuizView()
+                if let selectedCategory = selectedCategory {
+                    QuizView(selectedCategory: selectedCategory)
+                }
             }
             .navigationTitle("Start Quiz")
         }
@@ -84,6 +59,6 @@ struct QuizStartView: View {
 
 #Preview {
     QuizStartView()
-        .environment(Controller())
+        .environmentObject(Controller())
     
 }

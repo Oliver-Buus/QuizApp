@@ -12,10 +12,10 @@ struct Question: Decodable {
     let incorrectAnswers: [String]
     
     var allAnswers: [String] {
-        var answers = incorrectAnswers
-        answers.append(correctAnswer)
-        return answers
-    }
+           var answers = incorrectAnswers
+           answers.append(correctAnswer)
+           return answers
+       }
 }
 
 enum QuestionType: String, Decodable {

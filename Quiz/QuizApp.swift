@@ -2,11 +2,11 @@ import SwiftUI
 
 @main
 struct QuizApp: App {
-    @State var controller = Controller()
+    @StateObject var controller = Controller()
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .environment(controller)
+            QuizStartView()
+                .environmentObject(controller)
         }
     }
 }

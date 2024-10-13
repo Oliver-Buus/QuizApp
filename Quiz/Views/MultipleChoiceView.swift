@@ -4,6 +4,7 @@ struct MultipleChoiceView: View {
     let options: [String]
     @Binding var selectedAnswer: String?
     
+    
     var body: some View {
         VStack {
             HStack {

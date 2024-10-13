@@ -1,7 +1,11 @@
 import SwiftUI
 
 struct QuizView: View {
-    @Environment(Controller.self) private var controller: Controller
+    //@Environment(Controller.self) private var controller: Controller
+    
+    var selectedCategory: QuizCategory
+    
+    @EnvironmentObject var controller: Controller
     
     @State private var questionIndex = 0
     @State private var selectedAnswer: String? = nil
@@ -10,6 +14,7 @@ struct QuizView: View {
     @State private var isLoadingMoreQuestions: Bool = false
     
     var body: some View {
+
         NavigationStack {
             VStack {
                 if questionIndex >= controller.questions.count {
@@ -20,7 +25,7 @@ struct QuizView: View {
                         
                         Button("Load More Questions") {
                             isLoadingMoreQuestions = true
-                            controller.fetchQuestions(categoryString: controller.questions[0].category, difficulty: "") {
+                            controller.loadQuestions(category: selectedCategory, difficulty: .any) {
                                 isLoadingMoreQuestions = false
                                 questionIndex = 0
                             }
@@ -28,7 +33,6 @@ struct QuizView: View {
                     }
                 } else {
                     let question = controller.questions[questionIndex]
-                    
                     Text(question.question)
                         .font(.title)
                         .padding()
@@ -86,7 +90,3 @@ struct QuizView: View {
     }
 }
 
-#Preview {
-    QuizView()
-        .environment(Controller())
-}

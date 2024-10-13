@@ -1,4 +1,3 @@
-
 struct CategoryResult: Decodable {
     let triviaCategories: [QuizCategory]
 }

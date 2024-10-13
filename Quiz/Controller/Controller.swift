@@ -1,23 +1,20 @@
 import Foundation
 
-@Observable
-class Controller {
-    var categories: [QuizCategory] = []
+//@Observable
+class Controller: ObservableObject {
+    @Published var categories: [QuizCategory] = []
     var questions: [Question] = []
     var token: String = ""
     
-    
     init() {
-        fetchSessionToken()
+        requestSessionToken()
         guard let allCategoriesURL = URL(string: "https://opentdb.com/api_category.php") else { return }
-        fetchCategories(from: allCategoriesURL) {
-            Task {
-                await self.fetchQuestionCount()
-            }
-        }
+        loadQuizCategories(from: allCategoriesURL)
+        
     }
-    
-    private func fetchSessionToken() {
+        
+    /// Requests the server for a new token
+    private func requestSessionToken() {
         guard let url = URL(string: "https://opentdb.com/api_token.php?command=request") else { return }
         
         Task {
@@ -30,32 +27,31 @@ class Controller {
                 
                 if jsonResult.responseCode == 0 {
                     token = jsonResult.token
-                    print("TOKEN: \(token)")
                 }
             } catch {
                 print("Failed to decode token response: ", error)
             }
-            
-            
         }
     }
     
-    private func fetchCategories(from url: URL, completion: @escaping () -> Void) {
-        Task {
+    /// Loads all the quiz categories from the server
+    private func loadQuizCategories(from url: URL) {
+        Task { @MainActor in
             guard let rawData = await NetworkService.getData(from: url) else { return }
-            self.categories = decodeCategories(from: rawData)
-            //self.categories.append(QuizCategory(id: 0, name: "All Categories"))
-            completion()
+            self.categories.append(contentsOf: decodeCategories(from: rawData))
+            await loadQuestionCountsForCategories()
+            addAnyCategoryWithQuestionCounts()
         }
     }
     
-    private func fetchQuestionCount() async {
+    /// Loads the amount of questions for each category
+    @MainActor
+    private func loadQuestionCountsForCategories() async {
         var urls: [URL] = []
         categories.forEach { category in
             if category.id == 0 { return }
             if let url = URL(string: "https://opentdb.com/api_count.php?category=\(category.id)") {
                 urls.append(url)
-                print("Constructed URL: \(url)")
             }
         }
         
@@ -75,10 +71,8 @@ class Controller {
         }
     }
     
-    
-    func fetchQuestions(categoryString: String, difficulty: String, completion: @escaping () -> Void) {
-        guard let category = categories.first(where: {categoryString == $0.name}) else { return }
-        
+    /// Loads 10 questions based on the chosen category and difficulty
+    func loadQuestions(category: QuizCategory, difficulty: Difficulty, completion: @escaping () -> Void) {        
         
         var urlComponents = URLComponents(string: "https://opentdb.com/api.php?amount=10")
         
@@ -86,14 +80,11 @@ class Controller {
             let categoryItem = URLQueryItem(name: "category", value: "\(category.id)")
             urlComponents?.queryItems?.append(categoryItem)
         }
-        if !difficulty.isEmpty {
-            let difficultyItem = URLQueryItem(name: "difficulty", value: difficulty.lowercased())
+        if difficulty != .any {
+            let difficultyItem = URLQueryItem(name: "difficulty", value: difficulty.rawValue.lowercased())
             urlComponents?.queryItems?.append(difficultyItem)
         }
-        
-        guard let url = urlComponents?.url else { return }
-        print(url)
-        
+                
         if !token.isEmpty {
             let tokenItem = URLQueryItem(name: "token", value: token)
             urlComponents?.queryItems?.append(tokenItem)
@@ -101,7 +92,6 @@ class Controller {
         
         
         guard let url = urlComponents?.url else { return }
-        print(url)
         
         Task(priority: .low) {
             guard let rawData = await NetworkService.getData(from: url) else { return }
@@ -116,9 +106,6 @@ class Controller {
         
         do {
             let jsonResult = try decoder.decode(QuestionResult.self, from: data)
-            for question in self.questions {
-                print(question.question)
-            }
             return jsonResult.results
         } catch {
             print("decodeQuestions error: ", error)
@@ -133,13 +120,37 @@ class Controller {
         
         do {
             let jsonResult = try decoder.decode(CategoryResult.self, from: data)
-            categories = jsonResult.triviaCategories
-            return categories
+            return jsonResult.triviaCategories
         } catch {
             print("decodeCategories error: ", error)
         }
-        
-        print("empty")
         return []
+    }
+    
+    /// Creates a category named "Any" that contains the total number of questions
+    private func addAnyCategoryWithQuestionCounts() {
+        var easyQuestions = 0
+        var mediumQuestions = 0
+        var hardQuestions = 0
+        
+        categories.forEach { category in
+            easyQuestions += category.questionCount?.totalEasyQuestionCount ?? 0
+            mediumQuestions += category.questionCount?.totalMediumQuestionCount ?? 0
+            hardQuestions += category.questionCount?.totalHardQuestionCount ?? 0
+        }
+        let totalAmount = easyQuestions + mediumQuestions + hardQuestions
+        
+        categories
+            .insert(
+                QuizCategory(
+                    id: 0,
+                    name: "Any",
+                    questionCount: QuizCategory.QuestionCount(
+                        totalQuestionCount: totalAmount,
+                        totalEasyQuestionCount: easyQuestions,
+                        totalMediumQuestionCount: mediumQuestions,
+                        totalHardQuestionCount: hardQuestions)
+                ),
+                at: 0)
     }
 }
