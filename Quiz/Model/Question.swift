@@ -14,7 +14,7 @@ struct Question: Decodable {
     var allAnswers: [String] {
            var answers = incorrectAnswers
            answers.append(correctAnswer)
-           return answers
+        return answers.shuffled()
        }
 }
 

@@ -33,12 +33,13 @@ struct QuizView: View {
                     }
                 } else {
                     let question = controller.questions[questionIndex]
+                    let options = controller.shuffledAnswers[questionIndex]
                     Text(question.question)
                         .font(.title)
                         .padding()
                     
                     if question.type == QuestionType.multiple {
-                        MultipleChoiceView(options: question.allAnswers, selectedAnswer: $selectedAnswer)
+                        MultipleChoiceView(options: options, selectedAnswer: $selectedAnswer)
                     } else {
                         TrueFalseView(selectedAnswer: $selectedAnswer)
                     }

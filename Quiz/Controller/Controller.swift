@@ -4,6 +4,7 @@ import Foundation
 class Controller: ObservableObject {
     @Published var categories: [QuizCategory] = []
     var questions: [Question] = []
+    var shuffledAnswers: [[String]] = [] // used to keep all answers
     var token: String = ""
     
     init() {
@@ -96,6 +97,7 @@ class Controller: ObservableObject {
         Task(priority: .low) {
             guard let rawData = await NetworkService.getData(from: url) else { return }
             self.questions = decodeQuestions(from: rawData)
+            self.shuffledAnswers = self.questions.map {$0.allAnswers} // Puts all answers in the matrix
             completion()
         }
     }
