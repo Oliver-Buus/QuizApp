@@ -1,13 +1,13 @@
-struct CategoryResult: Decodable {
+struct CategoryResult: Codable {
     let triviaCategories: [QuizCategory]
 }
 
-struct QuizCategory: Decodable, Identifiable, Hashable {
+struct QuizCategory: Codable, Identifiable, Hashable {
     let id: Int
     let name: String
     var questionCount: QuestionCount?
     
-    struct QuestionCount: Decodable, Hashable {
+    struct QuestionCount: Codable, Hashable {
         let totalQuestionCount: Int
         let totalEasyQuestionCount: Int
         let totalMediumQuestionCount: Int
@@ -16,7 +16,7 @@ struct QuizCategory: Decodable, Identifiable, Hashable {
     
 }
 
-struct QuestionCountResult: Decodable {
+struct QuestionCountResult: Codable {
     let categoryId: Int
     let categoryQuestionCount: QuizCategory.QuestionCount
 }

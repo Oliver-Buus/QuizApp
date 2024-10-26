@@ -1,5 +1,5 @@
 
-enum Difficulty: String, CaseIterable, Identifiable {
+enum Difficulty: String, CaseIterable, Identifiable, Codable {
     case any = "Any"
     case easy = "Easy"
     case medium = "Medium"

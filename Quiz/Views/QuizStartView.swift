@@ -8,7 +8,7 @@ struct QuizStartView: View {
     
     @State private var selectedDifficulty: Difficulty = .any
     
-    @State private var isQuizStarted = false
+    //@State private var isQuizStarted = false
     
     
     var body: some View {
@@ -34,7 +34,13 @@ struct QuizStartView: View {
                 
                 Button("Start Quiz") {
                     controller.loadQuestions(category: selectedCategory!, difficulty: selectedDifficulty) {
-                        isQuizStarted = true
+                        DispatchQueue.main.async {
+                            controller.isQuizStarted = true
+                            if let selectedCategory = selectedCategory {
+                                controller.selectedCategory = selectedCategory
+                            }
+                        }
+
                     }
                 }
                 .font(.title)
@@ -47,9 +53,20 @@ struct QuizStartView: View {
                 .padding()
                 
             }
-            .navigationDestination(isPresented: $isQuizStarted) {
+            .onAppear {
+                if controller.isProgressing {
+                    controller.isQuizStarted = true
+                }
+            }
+
+            .navigationDestination(isPresented: $controller.isQuizStarted) {
                 if let selectedCategory = selectedCategory {
-                    QuizView(selectedCategory: selectedCategory)
+                    QuizView(selectedCategory: selectedCategory, selectedDifficulty: selectedDifficulty)
+                }
+                else {
+                    if let selectedCategory = controller.selectedCategory {
+                        QuizView(selectedCategory: selectedCategory, selectedDifficulty: controller.selectedDifficulty)
+                    }
                 }
             }
             .navigationTitle("Start Quiz")

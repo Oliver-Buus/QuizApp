@@ -6,12 +6,31 @@ class Controller: ObservableObject {
     var questions: [Question] = []
     var shuffledAnswers: [[String]] = [] // used to keep all answers
     var token: String = ""
+    var isProgressing: Bool = false
+    var selectedCategory: QuizCategory? = nil
+    var selectedDifficulty: Difficulty = .any
+    var questionsCompleted: Int = 0
+    @Published var isQuizStarted: Bool = false
     
     init() {
-        requestSessionToken()
+        let fileName = "quizProgress.json"
+        let progress = readFile(fileName: fileName)
+        if let progress {
+            self.questions = progress.questions
+            self.shuffledAnswers = progress.shuffledAnswers
+            self.token = progress.token
+            self.selectedCategory = progress.category
+            self.selectedDifficulty = progress.difficulty
+            self.questionsCompleted = progress.questionsCompleted
+            self.isQuizStarted = true
+            isProgressing = true
+        }
+
+        if !isProgressing {
+            requestSessionToken()
+        }
         guard let allCategoriesURL = URL(string: "https://opentdb.com/api_category.php") else { return }
         loadQuizCategories(from: allCategoriesURL)
-        
     }
         
     /// Requests the server for a new token
@@ -155,4 +174,48 @@ class Controller: ObservableObject {
                 ),
                 at: 0)
     }
+    
+    func readFile(fileName: String) -> QuizProgress? {
+        guard let fileURL = getFileURL(fileName: fileName) else { return nil }
+        
+        do {
+            let data = try Data(contentsOf: fileURL)
+            let decoder = JSONDecoder()
+            return try decoder.decode(QuizProgress.self, from: data)
+        } catch {
+            print("Error reading file at \(fileURL): \(error)")
+        }
+        return nil
+    }
+    
+    
+    func writeFile(_ progress: QuizProgress, toJson file: String) {
+        guard let path = getFileURL(fileName: file) else { return }
+        
+        do {
+            let encoder = JSONEncoder()
+            let data = try encoder.encode(progress)
+            try data.write(to: path)
+        } catch {
+            print("Error writing to file \(path): \(error)")
+        }
+    }
+    
+    func deleteFile(fileName: String) {
+        guard let fileURL = getFileURL(fileName: fileName) else { return  }
+        do {
+            try FileManager.default.removeItem(at: fileURL)
+        } catch {
+            print("Error deleting quiz progress file at \(fileURL): \(error)")
+        }
+    }
+    
+    func getFileURL(fileName: String) -> URL? {
+        let documentDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
+        return documentDirectory?.appendingPathComponent(fileName)
+    }
+    
+
+    
+    
 }

@@ -1,10 +1,10 @@
 
 
-struct QuestionResult: Decodable {
+struct QuestionResult: Codable {
     let results: [Question]
 }
 
-struct Question: Decodable {
+struct Question: Codable {
     let type: QuestionType
     let category: String
     let question: String
@@ -18,7 +18,7 @@ struct Question: Decodable {
        }
 }
 
-enum QuestionType: String, Decodable {
+enum QuestionType: String, Codable {
     case multiple
     case boolean
 }

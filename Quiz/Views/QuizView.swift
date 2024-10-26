@@ -4,6 +4,7 @@ struct QuizView: View {
     //@Environment(Controller.self) private var controller: Controller
     
     var selectedCategory: QuizCategory
+    var selectedDifficulty: Difficulty
     
     @EnvironmentObject var controller: Controller
     
@@ -19,17 +20,8 @@ struct QuizView: View {
             VStack {
                 if questionIndex >= controller.questions.count {
                     if isLoadingMoreQuestions {
+                        Text("Loading more questions...")
                         ProgressView()
-                    } else {
-                        Text("Quiz Complete!")
-                        
-                        Button("Load More Questions") {
-                            isLoadingMoreQuestions = true
-                            controller.loadQuestions(category: selectedCategory, difficulty: .any) {
-                                isLoadingMoreQuestions = false
-                                questionIndex = 0
-                            }
-                        }
                     }
                 } else {
                     let question = controller.questions[questionIndex]
@@ -86,7 +78,37 @@ struct QuizView: View {
                     }
                 }
             }
+            .onChange(of: questionIndex) {
+                if questionIndex == controller.questions.count {
+                    isLoadingMoreQuestions = true
+                    controller.loadQuestions(
+                        category: selectedCategory,
+                        difficulty: selectedDifficulty) {
+                        isLoadingMoreQuestions = false
+                        questionIndex = 0
+                    }
+                }
+                controller.writeFile(
+                    QuizProgress(
+                        token: controller.token,
+                        questions: controller.questions,
+                        shuffledAnswers: controller.shuffledAnswers,
+                        category: selectedCategory,
+                        difficulty: selectedDifficulty,
+                        questionsCompleted: questionIndex),
+                    toJson: "quizProgress.json")
+                
+            }
             .navigationTitle("Quiz")
+            .navigationBarItems(trailing: Button(action: {
+                controller.deleteFile(fileName: "quizProgress.json")
+            }) {
+                Image(systemName: "trash")
+                    .foregroundStyle(Color.red)
+            })
+            .onDisappear {
+                controller.isQuizStarted = false
+            }
         }
     }
 }
